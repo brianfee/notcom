@@ -8,10 +8,11 @@
 #include <unistd.h>
 
 #define MAX_BUF 1024
-#define FIFO "/tmp/notifications-command"
+#define FIFO "/tmp/notifications-command.fifo"
 
 int fifo_writer(char buffer[]);
 int fifo_reader();
+void notify_send(char buffer[]);
 
 int fifo_writer(char buffer[])
 {
@@ -51,24 +52,41 @@ int fifo_reader()
 }
 
 
+void notify_send(char buffer[])
+{
+	int buflen = strlen(buffer) + 1;
+	char *msg;
+
+	msg = (char*)malloc(strlen("notify-send ") + buflen + 3);
+	strcpy(msg, "notify-send \"");
+	strcat(msg, buffer);
+	strcat(msg, "\"");
+	system(msg);
+
+	return;
+}
+
+
 int main(int argc, char **argv)
 {
 	bool helpMessage = false;
 	bool daemonMode = false;
+	bool notifyMode = false;
 	bool verboseMode = false;
 	int opt;
 	int retVal;
 
 	/* Argument parsing. */
-	while ((opt = getopt(argc, argv, "hdv")) != -1)
+	while ((opt = getopt(argc, argv, "hdnv")) != -1)
 	{
 		switch(opt)
 		{
 			case 'h': helpMessage = true; break;
 			case 'd': daemonMode = true; break;
+			case 'n': notifyMode = true; break;
 			case 'v': verboseMode = true; break;
 			default:
-				fprintf(stderr, "Usage: %s [-hdv] [message]\n", argv[0]);
+				fprintf(stderr, "Usage: %s [-hdnv] [message]\n", argv[0]);
 				exit(EXIT_FAILURE);
 		}
 	}
@@ -98,6 +116,9 @@ int main(int argc, char **argv)
 		}
 
 		retVal = fifo_writer(newBuf);
+		if (notifyMode) {
+			notify_send(newBuf);
+		}
 
 		free(oldBuf);
 		free(newBuf);
