@@ -12,6 +12,7 @@
 
 int fifo_writer(char buffer[]);
 int fifo_reader();
+void help_message();
 void notify_send(char buffer[]);
 
 int fifo_writer(char buffer[])
@@ -49,6 +50,19 @@ int fifo_reader()
 		close(fd);
 	}
 	return 0;
+}
+
+
+void help_message()
+{
+	printf("Usage: notcom [OPTION] [output]\n");
+	printf("Intelligently route notifications to different outputs.\n");
+	printf("\n");
+	printf("Options:\n");
+	printf("\t-d\tdaemon mode. read default notifications\n");
+	printf("\n");
+
+	return;
 }
 
 
@@ -91,7 +105,10 @@ int main(int argc, char **argv)
 		}
 	}
 
-	if (daemonMode) {
+	if (helpMessage) {
+		help_message();
+
+	} else if (daemonMode) {
 		retVal = fifo_reader();
 
 	} else {
